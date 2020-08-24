@@ -52,7 +52,7 @@ class _PingState extends State<Ping> {
                         getPingResult();
                       }
                     },
-                    child: Text('Submit'),
+                    child: Text('Ping'),
                   ),
                 ),
                 Text(_res ?? '')
@@ -67,30 +67,57 @@ class Traceroute extends StatefulWidget {
 }
 
 class _TracerouteState extends State<Traceroute> {
-  String _platformVersion = 'Unknown';
+  final _formKey = GlobalKey<FormState>();
+  dynamic _res;
+  final formIP = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    initPlatformState();
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    formIP.dispose();
+    super.dispose();
   }
 
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    try {
-      platformVersion = await FlutterNetworkToolbox.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-    if (!mounted) return;
-
+  Future getTracertResult() async {
+    dynamic res = await FlutterNetworkToolbox.tracert(formIP.text);
     setState(() {
-      _platformVersion = platformVersion;
+      _res = res;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(_platformVersion));
+    return Form(
+        key: _formKey,
+        child: OverflowBox(
+            minHeight: 200.0,
+            maxHeight: 250.0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                TextFormField(
+                  controller: formIP,
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Please enter an ip';
+                    }
+                    return null;
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: RaisedButton(
+                    onPressed: () {
+                      if (_formKey.currentState.validate()) {
+                        //Scaffold.of(context).showSnackBar(SnackBar(content: Text('Processing Data')));
+                        getTracertResult();
+                      }
+                    },
+                    child: Text('Traceroute'),
+                  ),
+                ),
+                Text(_res ?? '')
+              ],
+            )));
   }
 }
